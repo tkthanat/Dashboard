@@ -4,6 +4,7 @@ import { createChart, LineSeries } from 'lightweight-charts';
 import Card from '../common/Card';
 import SectionTitle from '../common/SectionTitle';
 
+// Format time string
 const formatTime = (timeVal) => {
   if (!timeVal) return null;
   let d;
@@ -20,14 +21,16 @@ const formatTime = (timeVal) => {
   return `${y}-${m}-${day}`;
 };
 
-export default function CashFlowChart({ portfolios, unifiedDates, onChartReady }) {
+export default function CashFlowChart({ portfolios, unifiedDates, selectedClient = 'ALL', onChartReady }) {
   const chartContainerRef = useRef(null);
   const tooltipRef = useRef(null);
-  const isInitialFit = useRef(false);
-  const [activeFilter, setActiveFilter] = useState('ALL');
   const chartInstanceRef = useRef(null);
   const seriesMapRef = useRef(new Map());
+  
+  // Set default active filter to '7D' to focus on current dates
+  const [activeFilter, setActiveFilter] = useState('7D');
 
+  // Initialize chart
   useEffect(() => {
     if (!chartContainerRef.current) return;
     chartContainerRef.current.innerHTML = '';
@@ -42,6 +45,7 @@ export default function CashFlowChart({ portfolios, unifiedDates, onChartReady }
     });
     chartInstanceRef.current = chart;
 
+    // Handle tooltip
     chart.subscribeCrosshairMove(param => {
       const tooltip = tooltipRef.current;
       if (!tooltip || !param.time || param.point.x < 0 || param.point.y < 0) {
@@ -96,6 +100,7 @@ export default function CashFlowChart({ portfolios, unifiedDates, onChartReady }
       }
     });
 
+    // Handle resize
     const handleResize = () => chart.applyOptions({ width: chartContainerRef.current.clientWidth });
     window.addEventListener('resize', handleResize);
     if (onChartReady) onChartReady(chart);
@@ -106,6 +111,7 @@ export default function CashFlowChart({ portfolios, unifiedDates, onChartReady }
     };
   }, []);
 
+  // Draw series
   useEffect(() => {
     if (!chartInstanceRef.current || !portfolios.length || !unifiedDates.length) return;
     const chart = chartInstanceRef.current;
@@ -123,9 +129,13 @@ export default function CashFlowChart({ portfolios, unifiedDates, onChartReady }
     const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4'];
 
     portfolios.forEach((port, idx) => {
+      // Filter client
+      if (selectedClient !== 'ALL' && port.name !== selectedClient) return;
+
       const seriesColor = colors[idx % colors.length];
       const series = chart.addSeries(LineSeries, {
-        color: seriesColor, lineWidth: 1, lastValueVisible: true, priceLineVisible: false, crosshairMarkerVisible: true,
+        color: seriesColor, lineWidth: selectedClient === 'ALL' ? 1 : 2,
+        lastValueVisible: true, priceLineVisible: false, crosshairMarkerVisible: true,
       });
 
       const historyMap = new Map();
@@ -167,25 +177,39 @@ export default function CashFlowChart({ portfolios, unifiedDates, onChartReady }
       series.setData(uniqueData);
       seriesMapRef.current.set(series, { name: port.name, color: seriesColor });
     });
+  }, [portfolios, unifiedDates, selectedClient]);
 
-    if (!isInitialFit.current) {
-      setTimeout(() => {
-        const totalPoints = unifiedDates.length;
-        chart.timeScale().setVisibleLogicalRange({
-          from: Math.max(0, totalPoints - 8), 
-          to: totalPoints + 6 
-        });
-      }, 50);
-      isInitialFit.current = true;
+  // Handle time scale filter change
+  useEffect(() => {
+    if (!chartInstanceRef.current || !unifiedDates.length) return;
+    const chart = chartInstanceRef.current;
+    const totalPoints = unifiedDates.length;
+
+    let daysToShow = totalPoints;
+
+    if (activeFilter !== 'ALL') {
+      switch (activeFilter) {
+        case '1D': daysToShow = 2; break; 
+        case '3D': daysToShow = 4; break;
+        case '7D': daysToShow = 8; break; 
+        case '1M': daysToShow = 30; break;
+        case '3M': daysToShow = 90; break;
+        default: daysToShow = totalPoints;
+      }
     }
-  }, [portfolios, unifiedDates]);
+
+    chart.timeScale().setVisibleLogicalRange({
+      from: Math.max(0, totalPoints - daysToShow),
+      to: totalPoints + 6
+    });
+
+  }, [activeFilter, unifiedDates, selectedClient]);
 
   return (
     <Card padding="p-4" className="relative">
       <SectionTitle 
-        icon="🔥" 
         title="Daily Realized Cash Flow" 
-        subtitle="(All Ports)"
+        subtitle={selectedClient === 'ALL' ? "(All Ports)" : `(${selectedClient})`}
         rightElement={
           <div className="flex items-center gap-1 bg-[#0F141E] p-1 rounded border border-[#1E293B]">
             {['1D', '3D', '7D', '1M', '3M', 'ALL'].map(filter => (
@@ -200,7 +224,7 @@ export default function CashFlowChart({ portfolios, unifiedDates, onChartReady }
           </div>
         }
       />
-      <div className="h-[280px] w-full relative">
+      <div className="h-[280px] w-full relative mt-2">
         <div className="absolute inset-0" ref={chartContainerRef}></div>
         <div ref={tooltipRef} className="absolute z-10 bg-[#0F141E] border border-[#1E293B] shadow-lg rounded p-3 pointer-events-none hidden transition-opacity min-w-[200px]"></div>
       </div>

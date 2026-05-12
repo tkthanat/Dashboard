@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { createChart, AreaSeries } from 'lightweight-charts';
 
-export default function ClientEquityChart({ historyData }) {
+export default function ClientEquityChart({ historyData, timeRange = 'ALL' }) {
   const chartContainerRef = useRef(null);
   const chartInstanceRef = useRef(null);
+  const dataLengthRef = useRef(0);
 
+  // initialize chart
   useEffect(() => {
     if (!chartContainerRef.current || !historyData || historyData.length === 0) return;
     chartContainerRef.current.innerHTML = '';
@@ -27,17 +29,16 @@ export default function ClientEquityChart({ historyData }) {
       crosshairMarkerVisible: true,
     });
 
-    // Map data with fallback to estimated equity
+    // map data
     const formattedData = historyData.map(d => ({
       time: d.time || d.date, 
       value: parseFloat(d.est_current_equity || d.equity || 0)
     })).sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
+    dataLengthRef.current = formattedData.length;
     series.setData(formattedData);
     
-    setTimeout(() => {
-        chart.timeScale().fitContent();
-    }, 50);
+    applyTimeFilter(chart, dataLengthRef.current, timeRange);
 
     const handleResize = () => chart.applyOptions({ width: chartContainerRef.current.clientWidth });
     window.addEventListener('resize', handleResize);
@@ -47,6 +48,38 @@ export default function ClientEquityChart({ historyData }) {
       chart.remove();
     };
   }, [historyData]);
+
+  // handle time filter updates
+  useEffect(() => {
+    if (!chartInstanceRef.current || dataLengthRef.current === 0) return;
+    applyTimeFilter(chartInstanceRef.current, dataLengthRef.current, timeRange);
+  }, [timeRange]);
+
+  // apply time range logic
+  const applyTimeFilter = (chart, totalPoints, filter) => {
+    let daysToShow = totalPoints;
+    
+    switch (filter) {
+      case '1D': daysToShow = 2; break;
+      case '3D': daysToShow = 3; break;
+      case '7D': daysToShow = 7; break;
+      case '15D': daysToShow = 15; break;
+      case '1M': daysToShow = 30; break;
+      case '3M': daysToShow = 90; break;
+      case '6M': daysToShow = 180; break;
+      case 'ALL': daysToShow = totalPoints; break;
+      default: daysToShow = totalPoints;
+    }
+
+    if (filter === 'ALL') {
+      chart.timeScale().fitContent();
+    } else {
+      chart.timeScale().setVisibleLogicalRange({
+        from: Math.max(0, totalPoints - daysToShow),
+        to: totalPoints + 2
+      });
+    }
+  };
 
   return (
     <div className="h-full w-full relative">

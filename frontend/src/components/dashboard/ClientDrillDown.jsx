@@ -8,7 +8,8 @@ import ChartSkeleton from '../loading/ChartSkeleton';
 import TableSkeleton from '../loading/TableSkeleton';
 
 export default function ClientDrillDown({ client, onClose, isLoading = false }) {
-  const [timeRange, setTimeRange] = useState('3M');
+  // default state
+  const [timeRange, setTimeRange] = useState('ALL');
 
   const stats = useMemo(() => {
     if (!client || !client.history || client.history.length === 0) return null;
@@ -35,7 +36,7 @@ export default function ClientDrillDown({ client, onClose, isLoading = false }) 
     return { peak, maxMDD, peakDate, trough: currentTrough, troughDate, mtdPnl };
   }, [client]);
 
-  // Empty State
+  // empty state
   if (!client && !isLoading) {
     return (
       <div className="mt-6 p-10 border border-dashed border-[#1E293B] rounded-lg text-center text-gray-600 text-xs italic bg-[#0B1120]">
@@ -44,7 +45,7 @@ export default function ClientDrillDown({ client, onClose, isLoading = false }) 
     );
   }
 
-  // Loading State
+  // loading state
   if (isLoading) {
     return (
       <div className="mt-8 space-y-6 pb-10">
@@ -73,7 +74,7 @@ export default function ClientDrillDown({ client, onClose, isLoading = false }) 
   return (
     <div className="mt-8 space-y-6 animate-fade-in pb-10">
       
-      {/* Header */}
+      {/* header */}
       <div className="flex items-center gap-3 mb-2 px-1">
         <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">CLIENT DRILL-DOWN</span>
@@ -82,7 +83,7 @@ export default function ClientDrillDown({ client, onClose, isLoading = false }) 
         </span>
       </div>
 
-      {/* Client Info */}
+      {/* client info */}
       <div className="flex items-center justify-between border-b border-[#1E293B] pb-4 px-1">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-orange-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
@@ -107,7 +108,7 @@ export default function ClientDrillDown({ client, onClose, isLoading = false }) 
         )}
       </div>
 
-      {/* KPI Matrix */}
+      {/* kpi matrix */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 pt-2">
         {[
           { label: 'EQUITY', value: `฿${client.equity.toLocaleString()}`, color: 'text-white' },
@@ -125,22 +126,30 @@ export default function ClientDrillDown({ client, onClose, isLoading = false }) 
         ))}
       </div>
 
-      {/* Historical Analysis */}
+      {/* historical analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card padding="p-5" className="flex flex-col">
           <SectionTitle 
             icon={<span className="text-pink-500">📈</span>}
-            title="Equity Curve" subtitle="— 90 วัน"
+            title="Equity Curve" 
+            subtitle={`— ${timeRange}`}
             rightElement={
               <div className="flex gap-1 bg-[#0F141E] p-1 rounded-lg border border-[#1E293B]">
-                {['1M', '3M', '6M'].map(r => (
-                  <button key={r} onClick={() => setTimeRange(r)} className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${timeRange === r ? 'bg-blue-600 text-white shadow' : 'text-gray-500 hover:text-gray-300'}`}>{r}</button>
+                {/* update filter array */}
+                {['1D', '3D', '7D', '15D', '1M', '3M', '6M', 'ALL'].map(r => (
+                  <button 
+                    key={r} 
+                    onClick={() => setTimeRange(r)} 
+                    className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${timeRange === r ? 'bg-blue-600 text-white shadow' : 'text-gray-500 hover:text-gray-300'}`}
+                  >
+                    {r}
+                  </button>
                 ))}
               </div>
             }
           />
           <div className="flex-1 min-h-[200px] mb-4 mt-2">
-             <ClientEquityChart historyData={client.history} />
+             <ClientEquityChart historyData={client.history} timeRange={timeRange} />
           </div>
           <div className="bg-red-900/20 border border-red-900/50 rounded-lg p-2.5 flex items-center gap-2 text-[10px] mt-auto">
              <span className="text-red-500 font-bold shrink-0">📌 MDD: {drillDownMockData.mddAnalysis.date}</span>
@@ -192,7 +201,7 @@ export default function ClientDrillDown({ client, onClose, isLoading = false }) 
         </Card>
       </div>
 
-      {/* Data Tables */}
+      {/* data tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[300px]">
         <Card padding="p-5" className="flex flex-col">
           <SectionTitle icon={<span className="text-gray-300">📄</span>} title="Open Positions" subtitle="(310 Lots - 31 Zones)" />

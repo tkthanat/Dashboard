@@ -28,6 +28,9 @@ const parseDateString = (ds) => {
 export default function ChartManager({ portfolios = [], usdMarket = null }) {
   const [cashFlowChart, setCashFlowChart] = useState(null);
   const [usdChart, setUsdChart] = useState(null);
+  
+  // State สำหรับเก็บค่า Filter ของ Dropdown
+  const [selectedClient, setSelectedClient] = useState('ALL');
 
   // Unified Timeline Synchronization
   const unifiedDates = useMemo(() => {
@@ -106,10 +109,25 @@ export default function ChartManager({ portfolios = [], usdMarket = null }) {
             MOCK DATA
           </span>
         </div>
+
+        {/* Dropdown Filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Client Filter:</span>
+          <select 
+            value={selectedClient} 
+            onChange={(e) => setSelectedClient(e.target.value)}
+            className="bg-[#0F141E] border border-[#1E293B] text-gray-300 text-[10px] rounded px-2 py-1 outline-none cursor-pointer focus:border-blue-500 transition-colors"
+          >
+            <option value="ALL">ALL PORTS</option>
+            {portfolios.map((p, idx) => (
+              <option key={idx} value={p.name}>{p.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Charts */}
-      <CashFlowChart portfolios={portfolios} unifiedDates={unifiedDates} onChartReady={setCashFlowChart} />
+      <CashFlowChart portfolios={portfolios} unifiedDates={unifiedDates} selectedClient={selectedClient} onChartReady={setCashFlowChart} />
       <UsdMarketChart usdMarket={usdMarket} unifiedDates={unifiedDates} onChartReady={setUsdChart} />
     </div>
   );
