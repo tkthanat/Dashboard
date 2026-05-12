@@ -3,8 +3,6 @@ import SettradePanel from './system-health/SettradePanel';
 import OrderExecutionPanel from './system-health/OrderExecutionPanel';
 import SystemResourcesPanel from './system-health/SystemResourcesPanel';
 import ApiLatencyPanel from './system-health/ApiLatencyPanel';
-import StuckOrdersPanel from './system-health/StuckOrdersPanel';
-import { stuckOrdersData } from '../../data/mockData';
 import SystemResourceSkeleton from '../loading/SystemResourceSkeleton';
 import ChartSkeleton from '../loading/ChartSkeleton';
 import AlertListSkeleton from '../loading/AlertListSkeleton';
@@ -13,7 +11,6 @@ export default function SystemHealth() {
   const [healthData, setHealthData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch Initial Data
   useEffect(() => {
     const fetchHealth = async () => {
       try {
@@ -49,7 +46,6 @@ export default function SystemHealth() {
           </span>
         </div>
 
-        {/* Watchdog Status */}
         <div className="flex items-center gap-3 bg-[#121A28] border border-[#1E293B] px-3 py-1 rounded-full shadow-sm">
           <div className="flex items-center gap-2 border-r border-[#1E293B] pr-3">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
@@ -59,7 +55,6 @@ export default function SystemHealth() {
         </div>
       </div>
 
-      {/* Loading State */}
       {loading && !healthData ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -68,21 +63,15 @@ export default function SystemHealth() {
             <SystemResourceSkeleton />
           </div>
           <ChartSkeleton height="h-48" />
-          <div className="bg-[#121A28] border border-[#1E293B] rounded-lg p-5">
-            <div className="h-3 w-48 bg-[#1E293B] rounded mb-6 animate-pulse"></div>
-            <AlertListSkeleton count={2} />
-          </div>
         </>
       ) : (
         <>
-          {/* Main Panels */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <SettradePanel data={healthData?.settrade} />
             <OrderExecutionPanel /> 
             <SystemResourcesPanel data={healthData?.server} />
           </div>
           <ApiLatencyPanel />
-          <StuckOrdersPanel orders={stuckOrdersData} />
         </>
       )}
     </div>

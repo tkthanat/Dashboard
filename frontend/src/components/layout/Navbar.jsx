@@ -15,8 +15,8 @@ export default function Navbar({ loading, alertCount = 0, onNavigate }) {
           <button onClick={() => onNavigate('market')} className="px-3 py-1.5 hover:bg-[#1E293B] text-gray-400 rounded transition-colors flex items-center gap-2">Market</button>
           <button onClick={() => onNavigate('anomaly')} className="px-3 py-1.5 hover:bg-[#1E293B] text-gray-400 rounded transition-colors flex items-center gap-2">Equity</button>
           <button onClick={() => onNavigate('portfolio')} className="px-3 py-1.5 hover:bg-[#1E293B] text-gray-400 rounded transition-colors flex items-center gap-2">Clients</button>
-          <button onClick={() => onNavigate('risk')} className="px-3 py-1.5 hover:bg-[#1E293B] text-gray-400 rounded transition-colors flex items-center gap-2">Risk</button>
           <button onClick={() => onNavigate('drill')} className="px-3 py-1.5 hover:bg-[#1E293B] text-gray-400 rounded transition-colors flex items-center gap-2">Drill</button>
+          <button onClick={() => onNavigate('risk')} className="px-3 py-1.5 hover:bg-[#1E293B] text-gray-400 rounded transition-colors flex items-center gap-2">Risk</button>
           <button onClick={() => onNavigate('health')} className="px-3 py-1.5 hover:bg-[#1E293B] text-gray-400 rounded transition-colors flex items-center gap-2">Health</button>
         </div>
       </div>

@@ -6,10 +6,12 @@ import PortfolioTable from './components/dashboard/PortfolioTable';
 import RiskAlerts from './components/dashboard/RiskAlerts';
 import ClientDrillDown from './components/dashboard/ClientDrillDown';
 import SystemHealth from './components/dashboard/SystemHealth';
+// เพิ่ม Import ใหม่ตรงนี้
+import StuckOrdersPanel from './components/dashboard/StuckOrdersPanel'; 
 import ChartManager from './components/charts/ChartManager';
 import EquityAnomalyChart from './components/charts/EquityAnomalyChart';
 import Card from './components/common/Card';
-import { anomalyChartData } from './data/mockData';
+import { anomalyChartData, stuckOrdersData } from './data/mockData';
 
 function App() {
   const [data, setData] = useState({ summary: null, portfolios: [], usd_market: null });
@@ -17,8 +19,6 @@ function App() {
   const [selectedClient, setSelectedClient] = useState(null);
   
   const [alertCount, setAlertCount] = useState(0);
-  
-  // State Pop-up Toasts
   const [toasts, setToasts] = useState([]);
 
   const handleNewAlert = (newAlert) => {
@@ -107,12 +107,22 @@ function App() {
           </Card>
         </div>
 
+        <div id="drill"><ClientDrillDown client={selectedClient} onClose={() => setSelectedClient(null)} isLoading={loading} /></div>
+
         <div id="risk">
-          <RiskAlerts isLoading={loading} onAlertUpdate={setAlertCount} onNewAlert={handleNewAlert} />
+          <RiskAlerts isLoading={loading} onAlertUpdate={setAlertCount} onNewAlert={handleNewAlert} onViewClient={setSelectedClient} />
         </div>
         
-        <div id="drill"><ClientDrillDown client={selectedClient} onClose={() => setSelectedClient(null)} isLoading={loading} /></div>
+        {/* System Health & Stuck Orders*/}
         <div id="health"><SystemHealth /></div>
+
+        <div id="execution">
+           <StuckOrdersPanel 
+             orders={stuckOrdersData} 
+             onNotify={handleNewAlert} 
+           />
+        </div>
+        
       </main>
     </div>
   );
